@@ -21,9 +21,9 @@ variable "environment" {
 }
 
 variable "location" {
-  description = "Azure region. Check that the VM and PostgreSQL SKUs are available there for your subscription."
+  description = "Azure region. Must be allowed by any subscription policy and support every service used (run scripts/azure_preflight.sh). The MAHE Azure for Students policy allows uaenorth, malaysiawest, eastasia, indiasouthcentral and koreacentral; indiasouthcentral lacks data collection rules, so eastasia is the default."
   type        = string
-  default     = "centralindia"
+  default     = "eastasia"
 }
 
 variable "admin_ip_cidr" {
@@ -55,9 +55,9 @@ variable "ssh_public_key_path" {
 }
 
 variable "vm_size" {
-  description = "VM size. Standard_B2s (2 vCPU, 4 GiB) fits the model, consumer and dashboard."
+  description = "VM size. Standard_B2als_v2 (2 vCPU, 4 GiB) fits the model, consumer and dashboard."
   type        = string
-  default     = "Standard_B2s"
+  default     = "Standard_B2als_v2"
 }
 
 variable "postgres_sku" {

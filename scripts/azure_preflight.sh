@@ -4,8 +4,8 @@
 # Run after `az login`:   ./scripts/azure_preflight.sh [region] [vm_size] [pg_sku]
 set -euo pipefail
 
-REGION=${1:-centralindia}
-VM_SIZE=${2:-Standard_B2s}
+REGION=${1:-eastasia}
+VM_SIZE=${2:-Standard_B2als_v2}
 PG_SKU=${3:-Standard_B1ms}
 PROVIDERS=(Microsoft.Compute Microsoft.Network Microsoft.Storage Microsoft.DBforPostgreSQL
   Microsoft.OperationalInsights Microsoft.Insights Microsoft.ManagedIdentity)
@@ -32,6 +32,17 @@ if [[ -n "$ME" ]]; then
   fi
 fi
 
+echo "== Region policy (universities often restrict student subscriptions)"
+ALLOWED=$(az policy assignment list \
+  --query "[].parameters.listOfAllowedLocations.value[]" -o tsv 2>/dev/null | sort -u | tr '\n' ' ')
+if [[ -z "$ALLOWED" ]]; then
+  ok "no allowed-locations policy found"
+elif [[ " $ALLOWED " == *" $REGION "* ]]; then
+  ok "$REGION is allowed (allowed: $ALLOWED)"
+else
+  bad "$REGION is blocked by policy; allowed regions: $ALLOWED"
+fi
+
 echo "== Resource providers (registering is free)"
 for p in "${PROVIDERS[@]}"; do
   s=$(az provider show -n "$p" --query registrationState -o tsv 2>/dev/null || echo NotRegistered)
@@ -51,7 +62,7 @@ if [[ "$FOUND" == "0" ]]; then bad "$VM_SIZE not offered in $REGION"
 elif [[ -n "$RESTRICT" ]]; then bad "$VM_SIZE restricted in $REGION: $RESTRICT"
 else ok "$VM_SIZE available"; fi
 
-echo "== vCPU quota in $REGION (B2s needs 2)"
+echo "== vCPU quota in $REGION (the VM needs 2)"
 az vm list-usage -l "$REGION" --query "[?name.value=='cores' || name.value=='standardBSFamily'].{quota:name.localizedValue, used:currentValue, limit:limit}" -o table || true
 
 echo "== PostgreSQL Flexible Server $PG_SKU in $REGION"
@@ -63,6 +74,6 @@ echo
 if [[ $FAILED == 0 ]]; then
   echo "All checks passed for $REGION. Next: cd infra/terraform && terraform plan -out tfplan"
 else
-  echo "Some checks failed. Try another region, e.g.: $0 southindia   or   $0 eastus"
+  echo "Some checks failed. Try another region, e.g.: $0 eastasia"
   exit 1
 fi

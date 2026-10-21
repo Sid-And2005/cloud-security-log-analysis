@@ -131,7 +131,7 @@ flowchart TB
     subgraph RG[rg-seclog-dev]
         subgraph VNET[vnet 10.20.0.0/16]
             subgraph APP[snet-app 10.20.1.0/24 + NSG + Storage service endpoint]
-                VM[vm-seclog-dev<br/>Standard_B2s]
+                VM[vm-seclog-dev<br/>Standard_B2als_v2]
             end
             subgraph DBS[snet-postgres 10.20.2.0/24, delegated]
                 PG[psql Flexible Server B1ms<br/>no public access, Entra auth only]

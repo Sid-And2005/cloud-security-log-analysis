@@ -31,10 +31,13 @@ terraform apply tfplan        # about 10-20 minutes (PostgreSQL is the slowest)
 terraform output              # names, IPs, dashboard URL (no secrets)
 ```
 
-Before applying, check that your region offers `Standard_B2s` and PostgreSQL
-`B_Standard_B1ms`. Student subscriptions sometimes restrict regions or SKUs.
-If `apply` reports `SkuNotAvailable` or a location restriction, change
-`location`/`vm_size` (for example `Standard_B2als_v2`) and re-run.
+Region choice: the MAHE Azure for Students subscription has an *Allowed
+resource deployment regions* policy (uaenorth, malaysiawest, eastasia,
+indiasouthcentral, koreacentral). India South Central does not support data
+collection rules or log alert rules, so the project uses **East Asia**, where
+`Standard_B2s` is not offered: the VM is the equivalent `Standard_B2als_v2`
+(2 vCPU, 4 GiB). `scripts/azure_preflight.sh` checks all of this before
+anything is created; re-run it if you change `location` or `vm_size`.
 
 What gets created (see [ARCHITECTURE.md](ARCHITECTURE.md) section 4):
 
@@ -42,7 +45,7 @@ What gets created (see [ARCHITECTURE.md](ARCHITECTURE.md) section 4):
 |---|---|---|
 | Resource group, VNet, 2 subnets, NSG | network isolation | free |
 | Public IP (Standard, static) | SSH + dashboard | **yes** (small, hourly) |
-| Linux VM `Standard_B2s` + 30 GB disk | hosts consumer and dashboard | **yes**, the largest item (compute stops when deallocated; the disk still bills) |
+| Linux VM `Standard_B2als_v2` + 30 GB disk | hosts consumer and dashboard | **yes**, the largest item (compute stops when deallocated; the disk still bills) |
 | PostgreSQL Flexible Server B1ms + 32 GB | events, alerts, batches | **yes** (compute + storage) |
 | Private DNS zone + VNet link | private PostgreSQL name resolution | **yes** (cents/month) |
 | Storage account + `raw-logs` container | raw log archive | **yes**, by usage (very small here) |
