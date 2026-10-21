@@ -50,6 +50,9 @@ resource "azurerm_subnet" "db" {
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.20.2.0/24"]
+  # Azure adds this endpoint when PostgreSQL joins the subnet; declare it so
+  # Terraform does not try to remove it on every apply.
+  service_endpoints = ["Microsoft.Storage"]
 
   delegation {
     name = "postgres-flexible"

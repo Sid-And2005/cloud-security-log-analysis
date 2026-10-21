@@ -127,6 +127,15 @@ variable "github_repository" {
   default     = ""
 }
 
+variable "github_repository_ids" {
+  description = "Numeric IDs of the GitHub owner and repository, for the immutable OIDC subject format: gh api repos/OWNER/REPO --jq '{owner_id: .owner.id, repo_id: .id}'."
+  type = object({
+    owner_id = string
+    repo_id  = string
+  })
+  default = null
+}
+
 variable "github_environment" {
   description = "GitHub Actions environment that is allowed to deploy."
   type        = string
