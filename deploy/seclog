@@ -4,13 +4,18 @@
 #   sudo seclog traffic on|off         continuous synthetic traffic (producer service)
 #   sudo seclog attack <kind>          one attack now: brute_force | request_flood | endpoint_scan
 #   sudo seclog logs [consumer|dashboard|producer]   follow live logs
+#   sudo seclog stats                  totals in PostgreSQL (events, alerts by severity/source)
+#   sudo seclog alerts [n]             the n most recent alerts (default 10)
+#   sudo seclog model                  validate the model bundle and feature schema
+#   sudo seclog inbox                  files waiting in incoming/ and quarantine/
 set -euo pipefail
 
 APP=/opt/seclog/current
 as_app() {
   systemd-run --quiet --wait --pipe --collect --uid=seclog --gid=seclog \
     --property=EnvironmentFile=/etc/seclog/seclog.env \
-    --setenv=SERVICE_NAME=cli --working-directory="$APP" "$APP/.venv/bin/python" "$@"
+    --setenv=SERVICE_NAME=cli --setenv=LOG_LEVEL=ERROR \
+    --working-directory="$APP" "$APP/.venv/bin/python" "$@"
 }
 
 [[ $EUID -eq 0 ]] || { echo "run with sudo: sudo seclog $*"; exit 1; }
@@ -34,8 +39,24 @@ case "${1:-status}" in
   logs)
     journalctl -u "seclog-${2:-consumer}" -f -o cat
     ;;
+  stats)
+    as_app -c 'import json; from src.storage import get_storage; print(json.dumps(get_storage().stats(), indent=2))'
+    ;;
+  alerts)
+    as_app -c "import pandas as pd; from src.storage import get_storage
+pd.set_option('display.width', 250); pd.set_option('display.max_colwidth', 60)
+cols = ['processed_at', 'source_ip', 'user_id', 'priority', 'detection_source', 'anomaly_probability', 'threat_types']
+print(get_storage().load_alerts(${2:-10})[cols].to_string(index=False))"
+    ;;
+  model)
+    as_app manage.py check-model
+    ;;
+  inbox)
+    echo "incoming:   $(find /var/lib/seclog/incoming -name '*.json' | wc -l) file(s) waiting"
+    echo "quarantine: $(find /var/lib/seclog/quarantine -name '*.json' | wc -l) file(s) rejected"
+    ;;
   *)
-    sed -n '2,7p' "$0"
+    sed -n '2,11p' "$0"
     exit 1
     ;;
 esac
