@@ -95,4 +95,4 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
-      - run: shellcheck deploy/*.sh scripts/*.sh
+      - run: shellcheck deploy/*.sh deploy/seclog scripts/*.sh

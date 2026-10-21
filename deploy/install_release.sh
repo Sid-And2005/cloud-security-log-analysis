@@ -50,6 +50,7 @@ run_as_app "$REL" "$REL/.venv/bin/python" manage.py init-db
 PREVIOUS=$(readlink -f "$APP_ROOT/current" 2>/dev/null || true)
 
 install -m 0644 "$REL"/deploy/systemd/*.service /etc/systemd/system/
+install -m 0755 "$REL"/deploy/seclog /usr/local/bin/seclog
 systemctl daemon-reload
 
 switch_to() {

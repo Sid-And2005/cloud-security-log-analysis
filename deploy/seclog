@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Demo / operations helper on the VM (installed to /usr/local/bin/seclog).
+#   sudo seclog status                 services + health check
+#   sudo seclog traffic on|off         continuous synthetic traffic (producer service)
+#   sudo seclog attack <kind>          one attack now: brute_force | request_flood | endpoint_scan
+#   sudo seclog logs [consumer|dashboard|producer]   follow live logs
+set -euo pipefail
+
+APP=/opt/seclog/current
+as_app() {
+  systemd-run --quiet --wait --pipe --collect --uid=seclog --gid=seclog \
+    --property=EnvironmentFile=/etc/seclog/seclog.env \
+    --setenv=SERVICE_NAME=cli --working-directory="$APP" "$APP/.venv/bin/python" "$@"
+}
+
+[[ $EUID -eq 0 ]] || { echo "run with sudo: sudo seclog $*"; exit 1; }
+
+case "${1:-status}" in
+  status)
+    systemctl --no-pager --lines=0 status seclog-consumer seclog-dashboard seclog-producer | grep -E "●|Active:" || true
+    as_app manage.py health
+    ;;
+  traffic)
+    case "${2:-}" in
+      on) systemctl start seclog-producer && echo "Synthetic traffic ON (attack every ~60 s)" ;;
+      off) systemctl stop seclog-producer && echo "Synthetic traffic OFF" ;;
+      *) echo "usage: sudo seclog traffic on|off"; exit 1 ;;
+    esac
+    ;;
+  attack)
+    [[ -n "${2:-}" ]] || { echo "usage: sudo seclog attack brute_force|request_flood|endpoint_scan"; exit 1; }
+    as_app producer.py --attack "$2"
+    ;;
+  logs)
+    journalctl -u "seclog-${2:-consumer}" -f -o cat
+    ;;
+  *)
+    sed -n '2,7p' "$0"
+    exit 1
+    ;;
+esac

@@ -108,9 +108,12 @@ def make_normal_event():
     )
 
 
-def make_attack_burst():
+ATTACK_KINDS = ["brute_force", "request_flood", "endpoint_scan"]
+
+
+def make_attack_burst(kind=None):
     """Return a coherent burst of events from one recurring source IP."""
-    kind = random.choice(["brute_force", "request_flood", "endpoint_scan"])
+    kind = kind or random.choice(ATTACK_KINDS)
     ip = random.choice(ATTACK_IPS)
     events = []
 
@@ -186,7 +189,23 @@ def main():
         default=0.03,
         help="Delay between events within an attack campaign",
     )
+    parser.add_argument(
+        "--attack",
+        choices=ATTACK_KINDS,
+        help="Write one simulated attack campaign of this kind and exit (for live demos)",
+    )
     args = parser.parse_args()
+
+    if args.attack:
+        INCOMING_DIR.mkdir(parents=True, exist_ok=True)
+        kind, burst = make_attack_burst(args.attack)
+        for event in burst:
+            write_event(event)
+            if args.burst_delay:
+                time.sleep(args.burst_delay)
+        print(f"[SIMULATED CAMPAIGN] {kind}: {len(burst)} events from "
+              f"{burst[0]['source_ip']} written to {INCOMING_DIR}")
+        return
 
     if args.interval <= 0 or args.burst_interval <= 0 or args.burst_delay < 0:
         parser.error("Intervals must be positive; burst delay cannot be negative")

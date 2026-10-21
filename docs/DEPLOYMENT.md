@@ -1,10 +1,11 @@
 # Deployment and operations on Azure
 
-> **Status:** everything here was validated locally: `terraform validate`,
-> a systemd Ubuntu 24.04 VM simulation running the real install, rollback and
-> reboot paths against PostgreSQL and the Blob emulator, and the full test
-> suite. **It has not yet been applied to a real Azure subscription.** The steps
-> that only Azure can confirm are marked ☁️ and listed in section 9.
+> **Status (22 Oct 2026):** deployed and verified on the MAHE Azure for
+> Students subscription in East Asia: 38 resources applied by Terraform, the
+> GitHub Actions pipeline deploying to the VM with a passing health check,
+> managed-identity authentication to PostgreSQL and Blob Storage, and
+> application logs, VM metrics, PostgreSQL diagnostics and Blob logs arriving
+> in Log Analytics.
 
 ## 0. Prerequisites
 
@@ -159,6 +160,23 @@ Layout: code in `/opt/seclog/releases/<id>` (read-only to the app),
 `/opt/seclog/current` symlink, config in `/etc/seclog/seclog.env` (non-secret),
 data in `/var/lib/seclog`, service user `seclog` (no login shell).
 
+### Running a live demo
+
+The `seclog` helper (installed by every deployment) wraps the common commands:
+
+```bash
+ssh azureuser@<vm-ip>
+sudo seclog status                    # services + full health check
+sudo seclog traffic on                # continuous synthetic traffic (attack every ~60 s)
+sudo seclog attack brute_force        # one attack right now; also request_flood, endpoint_scan
+sudo seclog logs                      # follow the consumer's live log (Ctrl+C to stop)
+sudo seclog traffic off
+```
+
+Within a few seconds of `seclog attack`, the alert appears in the dashboard's
+*Alert investigation* table and a `threat_alert` record reaches Log Analytics
+(5-10 minutes later, ingestion delay).
+
 Sending real logs: any process that writes one JSON event per file into
 `/var/lib/seclog/incoming/` works. Write to a temporary name, then rename, as
 `producer.py:write_event` does. Required fields are `event_id`, `timestamp`
@@ -269,18 +287,13 @@ compute. **Azure restarts a stopped PostgreSQL server automatically after 7 days
 | Blob `AuthorizationPermissionMismatch` | Role assignments take up to about 5 minutes to propagate after `apply`. |
 | Dashboard says "Storage backend unavailable" | Intended behaviour when PostgreSQL is down: no stale data is shown. |
 
-## 9. Still to do in Azure (needs your subscription)
+## 9. Lessons from the first real deployment
 
-These steps could not be performed or verified from the development machine:
+Three problems appeared only against real Azure and were fixed in the code:
 
-1. ☁️ `terraform plan/apply` against your subscription. Region and SKU
-   availability, and student-subscription policy limits, are only known there.
-2. ☁️ Managed-identity token authentication to PostgreSQL and Blob. It is unit
-   tested with mocks, and the code paths match Microsoft's documented flow, but
-   it has not been exercised against Azure.
-3. ☁️ Azure Monitor Agent ingestion. Locally verified only up to the point where
-   the JSON logs land in `/var/log/syslog`, which is what the agent reads.
-4. ☁️ The GitHub Actions deploy job. Its VM-side script and its success/rollback
-   logic were exercised in the simulation; the `az vm run-command` call itself
-   needs a real VM.
-5. Screenshots of the running dashboard and Azure resources for the report.
+1. **Region policy.** The university subscription only allows five regions; the
+   original `centralindia` was blocked. `azure_preflight.sh` now checks the policy.
+2. **GitHub OIDC subject format.** GitHub sends `repo:owner@<id>/name@<id>:...`;
+   Terraform now trusts both that and the plain `repo:owner/name:...` form.
+3. **Run Command permission.** `az vm run-command create` reads the resource
+   group first, so the deploy identity also needs *Reader* on the group.

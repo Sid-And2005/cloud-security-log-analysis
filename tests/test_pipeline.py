@@ -170,3 +170,16 @@ def test_small_batches_linger_until_old_enough(pipe, local_data, monkeypatch):
     old = time.time() - 10
     os.utime(path, (old, old))
     assert pipe.poll_once() == 1 and not path.exists()       # old enough: process
+
+
+@pytest.mark.parametrize("kind", ["brute_force", "request_flood", "endpoint_scan"])
+def test_producer_on_demand_attack_is_detected(pipe, local_data, monkeypatch, kind):
+    import producer
+
+    monkeypatch.setattr(producer, "INCOMING_DIR", local_data / "incoming")
+    kind_out, burst = producer.make_attack_burst(kind)
+    assert kind_out == kind and len({e["source_ip"] for e in burst}) == 1
+    for event in burst:
+        producer.write_event(event)
+    pipe.poll_once()
+    assert len(pipe.storage.alerts) == 1
