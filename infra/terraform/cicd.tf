@@ -45,3 +45,13 @@ resource "azurerm_role_assignment" "github_vm" {
   principal_id         = azurerm_user_assigned_identity.github[0].principal_id
   principal_type       = "ServicePrincipal"
 }
+
+# `az vm run-command create` reads the resource group (for its location)
+# before acting on the VM; Reader is view-only.
+resource "azurerm_role_assignment" "github_rg_reader" {
+  count                = var.github_repository == "" ? 0 : 1
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_user_assigned_identity.github[0].principal_id
+  principal_type       = "ServicePrincipal"
+}

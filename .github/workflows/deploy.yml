@@ -64,11 +64,15 @@ jobs:
             --parameters "REPO=${{ github.repository }}" "SHA=$SHA" \
             --protected-parameters "GITHUB_TOKEN=$GH_TOKEN" \
             --timeout-in-seconds 1800 \
-            --async-execution false --output none || true
+            --async-execution false --output none \
+            || echo "::warning::run-command create reported an error; checking whether it ran"
 
-          az vm run-command show \
+          if ! az vm run-command show \
             --resource-group "$RG" --vm-name "$VM" --name "$NAME" \
-            --instance-view --query instanceView -o json > result.json
+            --instance-view --query instanceView -o json > result.json; then
+            echo "::error::The run command was never created on the VM (see the error above: usually a missing Azure permission)."
+            exit 1
+          fi
 
           az vm run-command delete \
             --resource-group "$RG" --vm-name "$VM" --name "$NAME" --yes || true
