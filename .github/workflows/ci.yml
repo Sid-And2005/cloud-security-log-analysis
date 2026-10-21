@@ -39,7 +39,7 @@ jobs:
       TEST_AZURITE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Start Azurite (Blob Storage emulator)
         run: |
@@ -47,7 +47,7 @@ jobs:
             mcr.microsoft.com/azure-storage/azurite \
             azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -68,7 +68,7 @@ jobs:
       - name: Synthetic detection evaluation
         run: python eval.py --json evaluation_results.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: evaluation-results
           path: evaluation_results.json
@@ -81,8 +81,8 @@ jobs:
       run:
         working-directory: infra/terraform
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8
       - run: terraform fmt -check -recursive
@@ -94,5 +94,5 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: shellcheck deploy/*.sh scripts/*.sh
