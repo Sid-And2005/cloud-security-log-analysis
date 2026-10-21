@@ -27,12 +27,16 @@ variable "location" {
 }
 
 variable "admin_ip_cidr" {
-  description = "Your public IP as x.x.x.x/32 (curl -s https://api.ipify.org). Only this address may SSH to the VM, open the dashboard and browse the blob container."
+  description = "Your public IP as x.x.x.x/32 (curl -s https://api.ipify.org), or your network's range (/24 to /32) if its NAT address changes, as on campus networks. Only these addresses may SSH to the VM, open the dashboard and browse the blob container."
   type        = string
 
   validation {
-    condition     = can(cidrhost(var.admin_ip_cidr, 0)) && endswith(var.admin_ip_cidr, "/32")
-    error_message = "admin_ip_cidr must be a single IPv4 address in /32 form, e.g. 203.0.113.7/32."
+    condition = (
+      can(cidrhost(var.admin_ip_cidr, 0)) &&
+      can(regex("/(2[4-9]|3[0-2])$", var.admin_ip_cidr)) &&
+      cidrhost(var.admin_ip_cidr, 0) == split("/", var.admin_ip_cidr)[0]
+    )
+    error_message = "admin_ip_cidr must be an IPv4 network from /24 to /32 written at its base address, e.g. 203.0.113.7/32 or 203.0.113.0/24."
   }
 }
 

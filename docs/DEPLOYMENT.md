@@ -108,7 +108,9 @@ ssh azureuser@<vm-ip> sudo systemctl start seclog-producer
    you a manual approval gate. Add the values from
    `terraform output github_actions_settings`:
    * Environment **secrets**: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
-   * Environment **variables**: `AZURE_RESOURCE_GROUP`, `AZURE_VM_NAME`
+   * **Repository** variables (Settings → Secrets and variables → Actions →
+     Variables): `AZURE_RESOURCE_GROUP`, `AZURE_VM_NAME`. The deploy job is
+     skipped until `AZURE_VM_NAME` exists, so CI stays green before Azure is set up.
 4. Push to `main`.
 
 What runs:

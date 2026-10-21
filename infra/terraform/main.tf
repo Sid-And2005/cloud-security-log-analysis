@@ -7,9 +7,11 @@ resource "random_string" "suffix" {
 }
 
 locals {
-  name     = "${var.project}-${var.environment}"
-  suffix   = random_string.suffix.result
-  admin_ip = split("/", var.admin_ip_cidr)[0]
+  name   = "${var.project}-${var.environment}"
+  suffix = random_string.suffix.result
+  # Storage firewall rules take a plain IP for a single address, or a CIDR
+  # range (/30 and /31 are not accepted by Azure; use /32 or /29 and wider).
+  admin_ip = endswith(var.admin_ip_cidr, "/32") ? split("/", var.admin_ip_cidr)[0] : var.admin_ip_cidr
   tags = merge({
     project     = var.project
     environment = var.environment

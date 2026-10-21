@@ -19,11 +19,14 @@ concurrency:
 
 jobs:
   deploy:
+    # Skipped (not failed) until the Azure settings exist as repository
+    # variables, so pushes made before `terraform apply` stay green.
     if: >-
+      vars.AZURE_VM_NAME != '' && (
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push')
+       github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     # Add required reviewers to this environment for a manual approval gate.
