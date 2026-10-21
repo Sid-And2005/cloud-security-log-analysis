@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. Contains no secrets.
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "centralindia"
+admin_ip_cidr   = "203.0.113.7/32" # your public IP: curl -s https://api.ipify.org
+
+# ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+# vm_size             = "Standard_B2s"
+# alert_email         = "you@example.com"
+# github_repository   = "your-github-user/security_log_platform"
+
+# Optional: let yourself connect to PostgreSQL with psql via an SSH tunnel.
+# postgres_human_admin = {
+#   object_id      = "<az ad signed-in-user show --query id -o tsv>"
+#   principal_name = "<your UPN, e.g. name@university.edu>"
+# }

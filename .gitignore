@@ -1,0 +1,45 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+
+# Models: only the deployed, tested model is versioned (2.8 MB).
+models/*.joblib
+!models/random_forest_model_v2.joblib
+
+# Runtime data, logs and archives (never commit datasets or processed logs)
+data/*
+!data/.gitkeep
+!data/incoming/
+data/incoming/*
+!data/incoming/.gitkeep
+*.log
+
+# Terraform state, plans and variable values (may contain secrets)
+infra/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+infra/terraform/terraform.tfvars
+infra/terraform/*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+
+# Build / OS
+dist/
+*.tar.gz
+.DS_Store

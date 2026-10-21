@@ -1,0 +1,16 @@
+# Runtime dependencies (versions tested together; scikit-learn must match the
+# version used to train models/random_forest_model_v2.joblib: 1.7.2).
+scikit-learn==1.7.2
+numpy==2.2.6
+pandas==2.3.3
+joblib==1.6.0
+streamlit==1.66.0
+streamlit-autorefresh==1.0.1
+plotly==7.1.0
+python-dotenv==1.2.4
+# Azure Database for PostgreSQL
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+# Azure Blob Storage + managed identity
+azure-storage-blob==12.31.0
+azure-identity==1.26.0

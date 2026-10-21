@@ -1,0 +1,22 @@
+# Synthetic demo traffic (normal events + simulated attack campaigns).
+# Not enabled by default: sudo systemctl start seclog-producer
+[Unit]
+Description=Security log platform - synthetic event producer (demo only)
+After=seclog-consumer.service
+
+[Service]
+Type=simple
+User=seclog
+Group=seclog
+WorkingDirectory=/opt/seclog/current
+EnvironmentFile=/etc/seclog/seclog.env
+Environment=SERVICE_NAME=producer
+ExecStart=/opt/seclog/current/.venv/bin/python producer.py --interval 1.0 --burst-interval 60
+Restart=on-failure
+RestartSec=5
+SyslogIdentifier=seclog-producer
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/seclog

@@ -1,0 +1,98 @@
+name: Deploy to Azure VM
+
+# Runs only after CI succeeds for a push to main (never for pull requests,
+# so untrusted code cannot deploy), or manually from the main branch.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read   # GITHUB_TOKEN lets the VM download this commit once
+  id-token: write  # OIDC login to Azure: no stored Azure secret
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    # Add required reviewers to this environment for a manual approval gate.
+    environment: production
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      VM: ${{ vars.AZURE_VM_NAME }}
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy via Azure Run Command (install, migrate, restart, health check)
+        id: deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          NAME="deploy-${SHA:0:12}-${{ github.run_attempt }}"
+          echo "Deploying $SHA to $VM as run command $NAME"
+
+          az vm run-command create \
+            --resource-group "$RG" --vm-name "$VM" --name "$NAME" \
+            --script "$(cat deploy/fetch_and_install.sh)" \
+            --parameters "REPO=${{ github.repository }}" "SHA=$SHA" \
+            --protected-parameters "GITHUB_TOKEN=$GH_TOKEN" \
+            --timeout-in-seconds 1800 \
+            --async-execution false --output none || true
+
+          az vm run-command show \
+            --resource-group "$RG" --vm-name "$VM" --name "$NAME" \
+            --instance-view --query instanceView -o json > result.json
+
+          az vm run-command delete \
+            --resource-group "$RG" --vm-name "$VM" --name "$NAME" --yes || true
+
+          echo "::group::VM output"
+          jq -r '.output // ""' result.json
+          echo "::endgroup::"
+          jq -r '.error // ""' result.json | tail -n 40
+
+          state=$(jq -r '.executionState' result.json)
+          code=$(jq -r '.exitCode' result.json)
+          echo "executionState=$state exitCode=$code"
+
+          # Success only if the VM-side health check passed.
+          if [[ "$state" == "Succeeded" && "$code" == "0" ]] && \
+             jq -r '.output' result.json | grep -q '^DEPLOY_RESULT=SUCCESS'; then
+            echo "Deployment verified healthy."
+          else
+            echo "::error::Deployment failed or health check did not pass (see VM output; a rollback may have occurred)."
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deployment ${{ steps.deploy.outcome }}"
+            echo "- Commit: \`${SHA}\`"
+            echo "- VM: \`${VM}\` in \`${RG}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

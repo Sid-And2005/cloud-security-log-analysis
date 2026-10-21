@@ -1,0 +1,177 @@
+{
+  "model_version": "random_forest_model_v2@f15baf3a3307",
+  "baseline": {
+    "windows": 130,
+    "ml_only": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 10,
+      "tn": 100,
+      "precision": 1.0,
+      "recall": 0.667,
+      "f1": 0.8,
+      "fpr": 0.0
+    },
+    "rules_only": {
+      "tp": 30,
+      "fp": 0,
+      "fn": 0,
+      "tn": 100,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "fpr": 0.0
+    },
+    "ml_plus_rules": {
+      "tp": 30,
+      "fp": 0,
+      "fn": 0,
+      "tn": 100,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "fpr": 0.0
+    },
+    "by_scenario": {
+      "normal": {
+        "label": 0,
+        "n": 100,
+        "ml": 0,
+        "rules": 0,
+        "combined": 0,
+        "mean_score": 0.001
+      },
+      "brute_force": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.801
+      },
+      "request_flood": {
+        "label": 1,
+        "n": 10,
+        "ml": 0,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.431
+      },
+      "endpoint_scan": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.856
+      }
+    }
+  },
+  "extended": {
+    "windows": 200,
+    "ml_only": {
+      "tp": 50,
+      "fp": 20,
+      "fn": 10,
+      "tn": 120,
+      "precision": 0.714,
+      "recall": 0.833,
+      "f1": 0.769,
+      "fpr": 0.143
+    },
+    "rules_only": {
+      "tp": 60,
+      "fp": 20,
+      "fn": 0,
+      "tn": 120,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.857,
+      "fpr": 0.143
+    },
+    "ml_plus_rules": {
+      "tp": 60,
+      "fp": 21,
+      "fn": 0,
+      "tn": 119,
+      "precision": 0.741,
+      "recall": 1.0,
+      "f1": 0.851,
+      "fpr": 0.15
+    },
+    "by_scenario": {
+      "normal": {
+        "label": 0,
+        "n": 100,
+        "ml": 0,
+        "rules": 0,
+        "combined": 0,
+        "mean_score": 0.005
+      },
+      "occasional_failed_logins": {
+        "label": 0,
+        "n": 20,
+        "ml": 0,
+        "rules": 1,
+        "combined": 1,
+        "mean_score": 0.193
+      },
+      "normal_high_traffic": {
+        "label": 0,
+        "n": 20,
+        "ml": 20,
+        "rules": 19,
+        "combined": 20,
+        "mean_score": 0.609
+      },
+      "brute_force": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.801
+      },
+      "repeated_failed_logins": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.788
+      },
+      "request_flood": {
+        "label": 1,
+        "n": 10,
+        "ml": 0,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.431
+      },
+      "endpoint_scan": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.855
+      },
+      "http_error_spike": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.728
+      },
+      "sensitive_access": {
+        "label": 1,
+        "n": 10,
+        "ml": 10,
+        "rules": 10,
+        "combined": 10,
+        "mean_score": 0.853
+      }
+    }
+  }
+}

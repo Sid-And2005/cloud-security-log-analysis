@@ -1,0 +1,50 @@
+#cloud-config
+# Prepares the VM for the application. Code is delivered by the deployment
+# (GitHub Actions Run Command or deploy/deploy_via_ssh.sh).
+package_update: true
+package_upgrade: true
+packages:
+  - python3
+  - python3-venv
+  - python3-pip
+  - rsyslog
+  - curl
+  - jq
+  - postgresql-client
+
+# Dedicated non-root service account (created before write_files_deferred).
+groups:
+  - seclog
+users:
+  - default
+  - name: seclog
+    system: true
+    primary_group: seclog
+    homedir: /var/lib/seclog
+    no_create_home: true
+    shell: /usr/sbin/nologin
+    lock_passwd: true
+
+write_files:
+  # Non-secret settings only: authentication uses the managed identity.
+  - path: /etc/seclog/seclog.env
+    permissions: "0640"
+    owner: root:seclog
+    defer: true
+    content: |
+%{ for key, value in app_env ~}
+      ${key}=${value}
+%{ endfor ~}
+  # Make sure systemd journal entries reach rsyslog, which the Azure Monitor
+  # Agent reads (Syslog table in Log Analytics).
+  - path: /etc/systemd/journald.conf.d/10-forward-to-syslog.conf
+    content: |
+      [Journal]
+      ForwardToSyslog=yes
+
+runcmd:
+  - install -d -o root -g root -m 0755 /opt/seclog /opt/seclog/releases
+  - install -d -o seclog -g seclog -m 0750 /var/lib/seclog /var/lib/seclog/incoming /var/lib/seclog/quarantine
+  - install -d -o root -g seclog -m 0750 /etc/seclog
+  - systemctl restart systemd-journald
+  - systemctl enable --now rsyslog

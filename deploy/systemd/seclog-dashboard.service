@@ -1,0 +1,27 @@
+[Unit]
+Description=Security log platform - Streamlit dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=seclog
+Group=seclog
+WorkingDirectory=/opt/seclog/current
+EnvironmentFile=/etc/seclog/seclog.env
+Environment=SERVICE_NAME=dashboard
+Environment=HOME=/var/lib/seclog
+ExecStart=/opt/seclog/current/.venv/bin/streamlit run app.py \
+    --server.port 8501 --server.address 0.0.0.0 --server.headless true \
+    --browser.gatherUsageStats false
+Restart=always
+RestartSec=5
+SyslogIdentifier=seclog-dashboard
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/seclog
+
+[Install]
+WantedBy=multi-user.target
