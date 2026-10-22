@@ -60,3 +60,12 @@ output "github_actions_settings" {
     AZURE_VM_NAME         = azurerm_linux_virtual_machine.app.name
   }
 }
+
+output "vm_hostname" {
+  value = azurerm_public_ip.vm.fqdn
+}
+
+output "dashboard_public_url" {
+  description = "Port 80 URL, reachable from any network when public_dashboard = true."
+  value       = var.public_dashboard ? "http://${azurerm_public_ip.vm.fqdn}" : null
+}

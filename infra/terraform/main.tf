@@ -93,6 +93,21 @@ resource "azurerm_network_security_group" "app" {
     destination_address_prefix = "*"
   }
 
+  dynamic "security_rule" {
+    for_each = var.public_dashboard ? [1] : []
+    content {
+      name                       = "allow-dashboard-http-public"
+      priority                   = 120
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "80"
+      source_address_prefix      = "Internet"
+      destination_address_prefix = "*"
+    }
+  }
+
   # Everything else from the internet is denied (explicit for clarity; the
   # default DenyAllInBound rule would also apply).
   security_rule {

@@ -12,7 +12,9 @@ resource "azurerm_public_ip" "vm" {
   resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  tags                = local.tags
+  # Stable hostname, e.g. seclog-o895zm.eastasia.cloudapp.azure.com (also works on IPv6-only networks via DNS64)
+  domain_name_label = "seclog-${local.suffix}"
+  tags              = local.tags
 }
 
 resource "azurerm_network_interface" "vm" {

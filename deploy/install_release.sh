@@ -52,6 +52,7 @@ PREVIOUS=$(readlink -f "$APP_ROOT/current" 2>/dev/null || true)
 install -m 0644 "$REL"/deploy/systemd/*.service /etc/systemd/system/
 install -m 0755 "$REL"/deploy/seclog /usr/local/bin/seclog
 systemctl daemon-reload
+systemctl enable --now --quiet seclog-port80
 
 switch_to() {
   ln -sfn "$1" "$APP_ROOT/current.new"

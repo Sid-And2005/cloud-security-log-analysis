@@ -46,6 +46,12 @@ variable "dashboard_allowed_cidrs" {
   default     = []
 }
 
+variable "public_dashboard" {
+  description = "Also serve the read-only dashboard on port 80 to any network (for demos away from admin_ip_cidr). Turn off afterwards."
+  type        = bool
+  default     = false
+}
+
 variable "admin_username" {
   description = "Linux administrator user on the VM (SSH key authentication only)."
   type        = string
